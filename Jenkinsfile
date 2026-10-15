@@ -12,7 +12,7 @@ pipeline {
 
         stage('Checkout') {
             steps {
-                checkout scm
+                echo 'Source code already checked out by Jenkins.'
             }
         }
 
