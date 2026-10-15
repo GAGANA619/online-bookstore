@@ -1,0 +1,64 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: online-bookstore
+  labels:
+    app: online-bookstore
+spec:
+  replicas: 3
+
+  selector:
+    matchLabels:
+      app: online-bookstore
+
+  template:
+    metadata:
+      labels:
+        app: online-bookstore
+
+    spec:
+      containers:
+        - name: online-bookstore
+          image: gagana6969/online-bookstore:v1
+          imagePullPolicy: Always
+
+          ports:
+            - containerPort: 80
+
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 5
+            periodSeconds: 5
+
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 80
+            initialDelaySeconds: 10
+            periodSeconds: 10
+
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "32Mi"
+            limits:
+              cpu: "250m"
+              memory: "128Mi"
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: online-bookstore-service
+spec:
+  type: NodePort
+
+  selector:
+    app: online-bookstore
+
+  ports:
+    - port: 80
+      targetPort: 80
+      nodePort: 30081

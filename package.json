@@ -1,0 +1,12 @@
+{
+  "name": "online-bookstore",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Online Bookstore CI/CD assignment",
+  "scripts": {
+    "test": "jest --runInBand"
+  },
+  "devDependencies": {
+    "jest": "29.7.0"
+  }
+}

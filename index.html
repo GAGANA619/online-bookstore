@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>BookNest | Online Bookstore</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            font-family: Arial, sans-serif;
+            background: #f4f6f9;
+            color: #243047;
+        }
+
+        header {
+            background: #263b5e;
+            color: white;
+            padding: 24px;
+            text-align: center;
+        }
+
+        header h1 {
+            margin: 0 0 8px;
+        }
+
+        .container {
+            max-width: 1100px;
+            margin: auto;
+            padding: 24px;
+        }
+
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 24px;
+        }
+
+        input, select, button {
+            padding: 11px;
+            border-radius: 6px;
+            border: 1px solid #ccd3df;
+            font-size: 14px;
+        }
+
+        input {
+            flex: 1;
+            min-width: 200px;
+        }
+
+        button {
+            background: #263b5e;
+            color: white;
+            cursor: pointer;
+            border: none;
+        }
+
+        button:hover {
+            background: #365b8e;
+        }
+
+        .books {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(230px, 1fr));
+            gap: 18px;
+        }
+
+        .book {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 2px 8px #00000012;
+        }
+
+        .book h3 {
+            margin-top: 0;
+        }
+
+        .category {
+            color: #526783;
+            font-size: 13px;
+        }
+
+        .price {
+            font-size: 20px;
+            font-weight: bold;
+        }
+
+        .available {
+            color: #14804a;
+            font-weight: bold;
+        }
+
+        .unavailable {
+            color: #c0392b;
+            font-weight: bold;
+        }
+
+        .panel {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 28px;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            gap: 12px;
+            padding: 10px 0;
+            border-bottom: 1px solid #e3e7ee;
+        }
+
+        .message {
+            font-weight: bold;
+            margin-top: 12px;
+        }
+
+        footer {
+            text-align: center;
+            padding: 24px;
+            color: #526783;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>📚 BookNest Online Bookstore</h1>
+    <p>Discover your next favourite book</p>
+</header>
+
+<main class="container">
+
+    <section class="controls">
+        <input
+            id="search"
+            type="text"
+            placeholder="Search by book title or author"
+            aria-label="Search books"
+        >
+
+        <select id="category" aria-label="Filter by category">
+            <option value="All">All Categories</option>
+            <option value="Technology">Technology</option>
+            <option value="Fiction">Fiction</option>
+            <option value="Science">Science</option>
+            <option value="Business">Business</option>
+        </select>
+    </section>
+
+    <h2>Available Books</h2>
+
+    <section id="books" class="books"></section>
+
+    <section class="panel">
+        <h2>🛒 Shopping Cart</h2>
+
+        <div id="cart"></div>
+
+        <p>Total: ₹<span id="total">0</span></p>
+
+        <button id="checkout">Place Order</button>
+
+        <p id="message" class="message" aria-live="polite"></p>
+    </section>
+
+    <section class="panel">
+        <h2>📦 Order Tracking</h2>
+        <div id="orders">No orders placed yet.</div>
+    </section>
+
+    <section class="panel">
+        <h2>⭐ Book Rating Summary</h2>
+        <p>
+            Our readers love discovering new stories and learning
+            through technology, science, business and fiction.
+        </p>
+        <p><strong>Reader satisfaction:</strong> 4.7/5</p>
+    </section>
+
+</main>
+
+<footer>
+    <p>BookNest — Read More, Discover More.</p>
+    <p id="deployment-version">Application Version: v1</p>
+</footer>
+
+<script>
+    const books = [
+        {
+            id: 1,
+            title: "Clean Code",
+            author: "Robert C. Martin",
+            category: "Technology",
+            price: 550,
+            stock: 5
+        },
+        {
+            id: 2,
+            title: "The Pragmatic Programmer",
+            author: "Andrew Hunt",
+            category: "Technology",
+            price: 650,
+            stock: 3
+        },
+        {
+            id: 3,
+            title: "The Alchemist",
+            author: "Paulo Coelho",
+            category: "Fiction",
+            price: 299,
+            stock: 8
+        },
+        {
+            id: 4,
+            title: "Atomic Habits",
+            author: "James Clear",
+            category: "Business",
+            price: 399,
+            stock: 0
+        },
+        {
+            id: 5,
+            title: "A Brief History of Time",
+            author: "Stephen Hawking",
+            category: "Science",
+            price: 450,
+            stock: 4
+        },
+        {
+            id: 6,
+            title: "The Lean Startup",
+            author: "Eric Ries",
+            category: "Business",
+            price: 499,
+            stock: 2
+        }
+    ];
+
+    const cart = [];
+    const orders = [];
+
+    const booksElement = document.getElementById("books");
+    const cartElement = document.getElementById("cart");
+    const totalElement = document.getElementById("total");
+    const messageElement = document.getElementById("message");
+    const ordersElement = document.getElementById("orders");
+
+    function renderBooks() {
+        const searchTerm =
+            document.getElementById("search").value.toLowerCase();
+
+        const selectedCategory =
+            document.getElementById("category").value;
+
+        const filteredBooks = books.filter(book => {
+            const matchesSearch =
+                book.title.toLowerCase().includes(searchTerm) ||
+                book.author.toLowerCase().includes(searchTerm);
+
+            const matchesCategory =
+                selectedCategory === "All" ||
+                book.category === selectedCategory;
+
+            return matchesSearch && matchesCategory;
+        });
+
+        booksElement.innerHTML = "";
+
+        filteredBooks.forEach(book => {
+            const card = document.createElement("article");
+            card.className = "book";
+
+            const title = document.createElement("h3");
+            title.textContent = book.title;
+
+            const author = document.createElement("p");
+            author.textContent = "Author: " + book.author;
+
+            const category = document.createElement("p");
+            category.className = "category";
+            category.textContent = "Category: " + book.category;
+
+            const price = document.createElement("p");
+            price.className = "price";
+            price.textContent = "₹" + book.price;
+
+            const availability = document.createElement("p");
+            availability.className =
+                book.stock > 0 ? "available" : "unavailable";
+
+            availability.textContent =
+                book.stock > 0
+                    ? "In Stock (" + book.stock + ")"
+                    : "Out of Stock";
+
+            card.append(title, author, category, price, availability);
+
+            if (book.stock > 0) {
+                const addButton = document.createElement("button");
+                addButton.textContent = "Add to Cart";
+                addButton.addEventListener("click", () => addToCart(book.id));
+                card.appendChild(addButton);
+            }
+
+            booksElement.appendChild(card);
+        });
+    }
+
+    function addToCart(bookId) {
+        const book = books.find(item => item.id === bookId);
+
+        if (!book || book.stock <= 0) {
+            messageElement.textContent = "This book is unavailable.";
+            return;
+        }
+
+        const existing = cart.find(item => item.id === bookId);
+        const quantity = existing ? existing.quantity : 0;
+
+        if (quantity >= book.stock) {
+            messageElement.textContent = "Maximum available quantity reached.";
+            return;
+        }
+
+        if (existing) {
+            existing.quantity++;
+        } else {
+            cart.push({
+                id: book.id,
+                title: book.title,
+                price: book.price,
+                quantity: 1
+            });
+        }
+
+        messageElement.textContent = "";
+        renderCart();
+    }
+
+    function renderCart() {
+        cartElement.innerHTML = "";
+
+        let total = 0;
+
+        cart.forEach(item => {
+            total += item.price * item.quantity;
+
+            const row = document.createElement("div");
+            row.className = "item";
+
+            const description = document.createElement("span");
+            description.textContent =
+                item.title + " × " + item.quantity;
+
+            const subtotal = document.createElement("span");
+            subtotal.textContent =
+                "₹" + item.price * item.quantity;
+
+            row.append(description, subtotal);
+            cartElement.appendChild(row);
+        });
+
+        totalElement.textContent = total;
+    }
+
+    function placeOrder() {
+        if (cart.length === 0) {
+            messageElement.textContent =
+                "Your cart is empty. Add a book first.";
+            return;
+        }
+
+        for (const item of cart) {
+            const book = books.find(book => book.id === item.id);
+
+            if (!book || book.stock < item.quantity) {
+                messageElement.textContent =
+                    "Insufficient stock for " + item.title;
+                return;
+            }
+        }
+
+        const order = {
+            id: "BK" + Date.now(),
+            items: cart.map(item => ({...item})),
+            total: Number(totalElement.textContent),
+            status: "Confirmed"
+        };
+
+        cart.forEach(item => {
+            const book = books.find(book => book.id === item.id);
+            book.stock -= item.quantity;
+        });
+
+        orders.unshift(order);
+        cart.length = 0;
+
+        renderBooks();
+        renderCart();
+        renderOrders();
+
+        messageElement.textContent =
+            "Thank you! Order " + order.id + " placed successfully.";
+    }
+
+    function renderOrders() {
+        ordersElement.innerHTML = "";
+
+        if (orders.length === 0) {
+            ordersElement.textContent = "No orders placed yet.";
+            return;
+        }
+
+        orders.forEach(order => {
+            const row = document.createElement("div");
+            row.className = "item";
+
+            const description = document.createElement("span");
+            description.textContent =
+                order.id + " — ₹" + order.total;
+
+            const status = document.createElement("span");
+            status.textContent = "Status: " + order.status;
+
+            row.append(description, status);
+            ordersElement.appendChild(row);
+        });
+    }
+
+    document.getElementById("search")
+        .addEventListener("input", renderBooks);
+
+    document.getElementById("category")
+        .addEventListener("change", renderBooks);
+
+    document.getElementById("checkout")
+        .addEventListener("click", placeOrder);
+
+    renderBooks();
+    renderCart();
+    renderOrders();
+</script>
+
+</body>
+</html>
